@@ -7,6 +7,9 @@ package com.nuigroup.touch {
 	import flash.utils.Endian;
 	/**
 	 * 
+	 * Main class for manage TouchLib
+	 * 
+	 * 
 	 * @author Gerard Sławiński || turbosqel
 	 */
 	public class TouchManager {
@@ -30,10 +33,14 @@ package com.nuigroup.touch {
 		 * @param	name
 		 * @param	header
 		 * @param	parsingFunction
+		 * @param	focus
 		 */
-		public static function addParser(name:String , header:String , parsingFunction:Function):void {
+		public static function addParser(name:String , header:String , parsingFunction:Function , focus:Boolean = false):void {
 			parsers[name] = parsingFunction;
 			headers[header] = name;
+			if(focus){
+				inputMode = name;
+			};
 		};
 		
 		/**
@@ -100,8 +107,8 @@ package com.nuigroup.touch {
 		 * @param	stage				stage instance , place to dispatch events
 		 * @param	host				host address
 		 * @param	port				port number
-		 * @param	inputMode			bytes reading mode - use TouchProtocol class
-		 * @param	outputMode			type of dispatching events - use TouchOutput class
+		 * @param	inputMode			bytes reading mode (CCV , TouchEvents) - use TouchProtocol class
+		 * @param	outputMode			type of dispatching events (MouseEvent or TouchEvent)- use TouchOutput class
 		 */
 		public static function initConnection(stage:Stage , host:String = "127.0.0.1" , port:int = 3000 , inputMode:String = "autoChoose" ,outputMode:String = "MouseEvent"):void {
 			TouchManager.stage = stage;

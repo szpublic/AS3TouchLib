@@ -1,6 +1,8 @@
 package {
 	import com.nuigroup.touch.emulator.EventCheckBox;
 	import com.nuigroup.touch.TouchManager;
+	import com.nuigroup.touch.TouchOutput;
+	import com.nuigroup.touch.TouchProtocol;
 	import flash.display.Sprite;
 	/**
 	 * ...
@@ -28,9 +30,7 @@ package {
 			
 			
 			addChild(new EventCheckBox());
-			
-			TouchManager.initConnection(stage);
-			
+			TouchManager.initConnection(stage , "127.0.0.1" , 3000 , TouchProtocol.AUTO , TouchOutput.MOUSE);
 		};
 		
 		

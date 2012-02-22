@@ -42,11 +42,8 @@ package com.nuigroup.touch.emulator {
 		};
 		
 		public function ms(e:Event):void {
-			if (e.type == MouseEvent.CLICK || e.type == TouchEvent.TOUCH_TAP) {
-				tf.appendText("\n"+e.type);
-				return;
-			};
-			tf.text = e.type;
+			tf.appendText("\n" + e.type);
+			tf.scrollV = tf.maxScrollV
 		};
 		
 	};

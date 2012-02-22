@@ -325,7 +325,7 @@ package com.nuigroup.touch {
 		 * @param	at			target position
 		 * @return				array of points
 		 */
-		internal static function getObjects(at:Point):Array {
+		public static function getObjects(at:Point):Array {
 			if (TouchManager.stage) {
 				return TouchManager.stage.getObjectsUnderPoint(at);
 			};
