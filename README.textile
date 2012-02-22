@@ -11,6 +11,8 @@ h4. How it works : connect to socket , emulate touch using build-in functions or
 .
 
 
+h3. @ Formats :
+
 h5. Supported formats :
  * CCV TCP (binary socket)
  * formated TouchEvents (FlashEvents , described lower)
@@ -24,7 +26,7 @@ h5. In development :
 
 h3. @usage
 
-h5. Basic initalize :
+h4. Basic initalize :
 
 To quick init , use TouchManager initialize functions :
 
@@ -56,8 +58,48 @@ TouchManager.initSocket(stage, socket , TouchProtocol.FLASHEVENT , TouchOutput.M
 
 This code will listen for socket data in FlashEvents mode and dispatch MouseEvent's
 
+h4. About Input/Output :
+
+h5. input (TouchProtocol)
+
+Input element inform about format of incomming data . Build-in functions to parse binary data contains TouchProtocol class .
+To set input , use code :
+<pre><code>import com.nuigroup.touch.TouchManager;
+import com.nuigroup.touch.TouchProtocol;
+
+TouchManager.inputMode = TouchProtocol.FLASHEVENT</code></pre>
+
+h5. output (TouchOutput)
+
+Output provide 2 modes : MouseEvent or TouchEvent . 
+<pre><code>import com.nuigroup.touch.TouchManager;
+import com.nuigroup.touch.TouchOutput;
+
+TouchManager.outputMode = TouchOutput.MOUSE
+//or
+TouchManager.outputMode = TouchOutput.TOUCH</code></pre>
 
 
+h4@ Advanced usage :
+
+Lib is ready to add own extensions without any code change .
+For this You can look into at TouchCore class or simply add function using TouchManager :
+
+<pre><code>import com.nuigroup.touch.TouchManager;
+import flash.utils.IDataInput;
+
+function YourParseFunction(data:IDataInput):void {
+    // Your code
+}
+// ParserName is title for index in object than contain parsers
+// You can always switch to other parser and back to this by set 
+// TouchManager.inputMode = "ParserName";
+// Head is begging of binary message . Head is for automode that automaticly compare header with begging of message
+// and choose parser .
+// last boolean value define inputMode , if true - input mode is set to this parser
+TouchManager.addParser("ParserName" , "Head" , YourParseFunction , true);</code></pre>
+
+This code will add parse function and set it as input.
 
 
 h3. @authors
