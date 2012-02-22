@@ -1,4 +1,67 @@
 h1. 		:: AS3TouchLib ::
 
 
-h2. Small library for reading touch data and dispatching Touch or Mouse events on DisplayObjects .
+
+h4. Small , easy to use , pure AS3 library for reading touch data and dispatching Touch or Mouse events on DisplayObjects .
+Library allow to add own extensions and data parsers , so You dont have to edit any file to setup own data types .
+
+h4. How it works : connect to socket , emulate touch using build-in functions or recive (TouchLib can automaticly choose data type) and parse bytes  , dispatch events on display list just like mouse or touch interaction .
+
+
+.
+
+
+h5. Supported formats :
+ * CCV TCP (binary socket)
+ * formated TouchEvents (FlashEvents , described lower)
+
+
+h5. In development :
+ * CCV / TUIO  XML
+ * TUIO UDP (in AIR)
+
+
+
+h3. @usage
+
+h5. Basic initalize :
+
+To quick init , use TouchManager initialize functions :
+
+<pre><code>import com.nuigroup.touch.TouchManager;
+TouchManager.initConnection(stage);
+</code></pre>
+
+This code will create Socket , connect to localhost on port 3000 and listen for data .
+
+
+To customize address , port and output/input mode , You can use params :
+
+<pre><code>import com.nuigroup.touch.TouchManager;
+import com.nuigroup.touch.TouchOutput;
+import com.nuigroup.touch.TouchProtocol;
+
+TouchManager.initConnection(stage , "192.168.1.5" , 3333 , TouchProtocol.CCVINPUT , TouchOutput.TOUCH );</code></pre>
+
+Touch manager will connect to address , listene for CCV data type and dispatch TouchEvent's .
+
+
+Initialize with own Socket connection :
+
+<pre><code>import com.nuigroup.touch.TouchManager;
+import com.nuigroup.touch.TouchOutput;
+import com.nuigroup.touch.TouchProtocol;
+
+TouchManager.initSocket(stage, socket , TouchProtocol.FLASHEVENT , TouchOutput.MOUSE);</code></pre>
+
+This code will listen for socket data in FlashEvents mode and dispatch MouseEvent's
+
+
+
+
+
+h3. @authors
+
+h4. NUIGroup.com community
+as3 development     : Gerard Sławiński || turbosqel
+test and support    : Christian Moore
