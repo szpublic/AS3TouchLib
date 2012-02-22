@@ -1,0 +1,4 @@
+h1. 		:: AS3TouchLib ::
+
+
+h2. Small library for reading touch data and dispatching Touch or Mouse events on DisplayObjects .
