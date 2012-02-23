@@ -28,7 +28,7 @@ package com.nuigroup.touch {
 		 */
 		protected static var interval:Number;
 		
-		public static var CCVTimeout:int = 200;
+		public static var CCVTimeout:int = 300;
 		
 		/**
 		 * object contain touch's data
@@ -66,14 +66,18 @@ package com.nuigroup.touch {
 			data.readBytes(read);
 			read.endian = Endian.LITTLE_ENDIAN;
 			data.endian = Endian.LITTLE_ENDIAN;
-			read.position = 0;
 			
 			for (var head:String in TouchManager.headers) {
+				read.position = 0;
 				if (head == read.readUTFBytes(head.length)) {
 					TouchManager.inputMode = TouchManager.headers[head];
 					break;
 				};
-				read.position = 0;
+				
+			};
+			
+			if (parser == arguments.callee) {
+				return;
 			};
 			
 			read.position = 0;
