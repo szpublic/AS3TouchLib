@@ -19,7 +19,7 @@ h5. Supported formats :
 
 
 h5. In development :
- * CCV / TUIO  XML
+ * CCV  XML
  * TUIO UDP (in AIR)
 
 
