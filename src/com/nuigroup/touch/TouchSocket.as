@@ -53,7 +53,7 @@ package com.nuigroup.touch {
 		/**
 		 * socket close handler
 		 */
-		protected function socketClosed():void {
+		protected function socketClosed(e:Event):void {
 			TouchManager.dispatchEvent(new TouchManagerEvent(TouchManagerEvent.CLOSED));
 		};
 		

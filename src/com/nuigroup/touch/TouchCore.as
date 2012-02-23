@@ -8,6 +8,7 @@ package com.nuigroup.touch {
 	import flash.net.Socket;
 	import flash.utils.ByteArray;
 	import flash.utils.clearInterval;
+	import flash.utils.Endian;
 	import flash.utils.IDataInput;
 	import flash.utils.setTimeout;
 	/**
@@ -63,6 +64,8 @@ package com.nuigroup.touch {
 		public static function parseCheck(data:IDataInput):void {
 			var read:ByteArray = new ByteArray();
 			data.readBytes(read);
+			read.endian = Endian.LITTLE_ENDIAN;
+			data.endian = Endian.LITTLE_ENDIAN;
 			read.position = 0;
 			
 			for (var head:String in TouchManager.headers) {
@@ -211,7 +214,7 @@ package com.nuigroup.touch {
 		 * output function to dispach event .
 		 * Function scheme : f(phase:int , point:Point , target:DisplayObject , id:int, force:Number):void
 		 */
-		public static var EventDelegate:Function;
+		public static var EventDelegate:Function = dispatchMouseEvent;
 		
 		/**
 		 * dispatch output Event on selected object , if target is accessable for mouse
