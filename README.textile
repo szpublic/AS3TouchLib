@@ -15,12 +15,10 @@ h3. @ Formats :
 
 h5. Supported formats :
  * CCV TCP (binary socket)
+ * CCV flash XML
+ * TUIO TCP
+ * TUIO UDP (with AIR)
  * formated TouchEvents (FlashEvents , described lower)
-
-
-h5. In development :
- * CCV  XML
- * TUIO UDP (in AIR)
 
 
 
