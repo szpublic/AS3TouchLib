@@ -30,7 +30,7 @@ package {
 			
 			
 			addChild(new EventCheckBox());
-			TouchManager.initConnection(stage , "127.0.0.1" , 3000 , TouchProtocol.AUTO , TouchOutput.MOUSE);
+			TouchManager.initConnection(stage , "192.168.1.10" , 3000 , TouchProtocol.AUTO , TouchOutput.MOUSE);
 		};
 		
 		

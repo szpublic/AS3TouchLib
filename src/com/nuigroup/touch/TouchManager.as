@@ -7,33 +7,60 @@ package com.nuigroup.touch {
 	import flash.utils.Endian;
 	/**
 	 * 
-	 * Main class for manage TouchLib
+	 * Main class for manage TouchLib .
+	 * Here You can set input (binary data parser ; check TouchProtocol class)
+	 * and touch output ( dispatching events - MouseEvent , TouchEvent , or own handler ; check TouchOutput and github info's )
 	 * 
 	 * 
-	 * @author Gerard Sławiński || turbosqel
+	 * 
+	 * 
+	 * @usage	For quick run use initConnection and initSocket functions . More detiles You can find in github README or NUIGroup forums
+	 * @link	nuigroup.com/forums
+	 * @author	Gerard Sławiński || turbosqel.pl
 	 */
 	public class TouchManager {
 		
 		////////////////////////////////////////////////////////////////////////////////
 		////////////////////////////////////////////////////////////////////////////////
 		
-		//<------------------------- SETTINGS
+		//<------------------------- SETTINGS & DATA
 		
 		/**
-		 * build in parsers
+		 * build-in parsers
 		 */
-		internal static var parsers:Object = {autoChoose:TouchCore.parseCheck , ccvbinary:TouchCore.parseCCV , flashtouchevent:TouchCore.parseFlashEvent };
+		internal static var parsers:Object = {autoChoose:TouchCore.parseCheck , tuioOSC:TouchCore.parseTUIO ,flashXML:TouchCore.parseXML , ccvbinary:TouchCore.parseCCV , flashtouchevent:TouchCore.parseFlashEvent };
+		
+		
+		protected static var _headers:Object;
 		/**
 		 * build in parsers headers
 		 */
-		internal static var headers:Object = { CCV:TouchProtocol.CCVINPUT , FL:TouchProtocol.FLASHEVENT };
+		public static function get headers():Object {
+			if (!_headers) {
+				_headers = new Object();
+				// ccv :
+				_headers["CCV"] = TouchProtocol.CCVINPUT;
+				// flash events
+				_headers["FL"] = TouchProtocol.FLASHEVENT;
+				// xml
+				_headers["<OSCPACKET"] = TouchProtocol.FLASHXML;
+				// tuio
+				_headers["#bundle"] = TouchProtocol.TUIO;
+			};
+			return _headers;
+		};
+		
+		////////////////////////////////////////////////////////////////////////////////
+		////////////////////////////////////////////////////////////////////////////////
+		
+		//<------------------------- ADD PARSER
 		
 		/**
-		 * 
-		 * @param	name
-		 * @param	header
-		 * @param	parsingFunction
-		 * @param	focus
+		 * add new parser to index
+		 * @param	name				parser name
+		 * @param	header				string to compare with header of message (for autoChoose function)
+		 * @param	parsingFunction		function that recive message binary data , ex: function (data:IDataInput):void ;
+		 * @param	focus				if true , this parser will be set as primary
 		 */
 		public static function addParser(name:String , header:String , parsingFunction:Function , focus:Boolean = false):void {
 			parsers[name] = parsingFunction;
@@ -43,9 +70,14 @@ package com.nuigroup.touch {
 			};
 		};
 		
+		////////////////////////////////////////////////////////////////////////////////
+		////////////////////////////////////////////////////////////////////////////////
+		
+		//<------------------------- INPUT & OUTPUT SETTINGS
+		
 		/**
 		 * input mode name
-		 * function 
+		 * _headers[input]
 		 */
 		internal static var input:String;
 		/**
@@ -55,7 +87,7 @@ package com.nuigroup.touch {
 		internal static var output:String;
 		
 		/**
-		 * set binary data reader type . Default is automatic check .
+		 * set binary data reader type , for build-in parsers use TouchProtocol class const values . Default is auto-check .
 		 */
 		public static function set inputMode(mode:String):void {
 			TouchCore.parser = parsers[mode];
@@ -131,7 +163,10 @@ package com.nuigroup.touch {
 			socket.addEventListener(ProgressEvent.SOCKET_DATA , TouchCore.reciveData);
 		};
 		
-		
+		/**
+		 * focus on socket
+		 * @param	s		target tcp socket
+		 */
 		public static function addSocket(s:Socket):void {
 			s.endian = Endian.LITTLE_ENDIAN;
 			s.addEventListener(ProgressEvent.SOCKET_DATA , TouchCore.reciveData);
@@ -144,12 +179,30 @@ package com.nuigroup.touch {
 		//<------------------------- STATIC EVENT DISPATCHER
 		
 		protected static var ed:EventDispatcher = new EventDispatcher();
+		
+		/**
+		 * adds event listener
+		 * @param	type		event type
+		 * @param	listener	callback function
+		 */
 		public static function addEventListener(type:String , listener:Function):void {
 			ed.addEventListener(type, listener);
 		};
+		
+		/**
+		 * remove event listener
+		 * @param	type		event type
+		 * @param	listener	callback function
+		 */
 		public static function removeEventListener(type:String , listener:Function):void {
 			ed.removeEventListener(type, listener);
 		};
+		
+		/**
+		 * dispatch event
+		 * @param	event
+		 * @return
+		 */
 		internal static function dispatchEvent(event:Event):Boolean {
 			return ed.dispatchEvent(event);
 		};

@@ -19,7 +19,7 @@ package com.nuigroup.touch {
 		/**
 		 * delay for tap event , if time between touch start and end is smaller than TAP_DELAY , Tap events is dispatcher
 		 */
-		public static var TAP_DELAY:int = 100;
+		public static var TAP_DELAY:int = 220;
 		
 		////////////////////////////////////////////////////////////////////////////////
 		////////////////////////////////////////////////////////////////////////////////
@@ -55,6 +55,11 @@ package com.nuigroup.touch {
 		 * actual elements on stage under touch point
 		 */
 		public var under:Array;
+		
+		/**
+		 * recognized shape ID; for TUIO
+		 */
+		public var shape:Number = NaN;
 		
 		////////////////////////////////////////////////////////////////////////////////
 		////////////////////////////////////////////////////////////////////////////////

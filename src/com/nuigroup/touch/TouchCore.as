@@ -11,9 +11,15 @@ package com.nuigroup.touch {
 	import flash.utils.Endian;
 	import flash.utils.IDataInput;
 	import flash.utils.setTimeout;
+	
 	/**
-	 * ...
-	 * @author Gerard Sławiński || turbosqel
+	 * 
+	 * 
+	 * 
+	 * 
+	 * @version 1
+	 * 
+	 * @author Gerard Sławiński || nuigroup.turbosqel
 	 */
 	public class TouchCore {
 		
@@ -28,12 +34,20 @@ package com.nuigroup.touch {
 		 */
 		protected static var interval:Number;
 		
+		/**
+		 * ccv timeout delay
+		 */
 		public static var CCVTimeout:int = 300;
 		
 		/**
 		 * object contain touch's data
 		 */
 		public static var touchData:Object = new Object();
+		
+		/**
+		 * object contain recognized touchs ( for TUIO )
+		 */
+		public static var objectsData:Object = new Object();
 		
 		/**
 		 * parse bytes to Touch data
@@ -46,7 +60,7 @@ package com.nuigroup.touch {
 		/**
 		 * parser function
 		 */
-		public static var parser:Function = parseCheck;
+		internal static var parser:Function = parseCheck;
 		
 		/**
 		 * recive data from socket and parse
@@ -56,6 +70,10 @@ package com.nuigroup.touch {
 			parse(e.target as Socket);
 		};
 		
+		////////////////////////////////////////////////////////////////////////////////
+		////////////////////////////////////////////////////////////////////////////////
+		
+		//<---------------- AUTO CHECK&CHOOSE PARSER
 		
 		/**
 		 * function that read header , check for data type and switch to correct encoding function
@@ -69,14 +87,14 @@ package com.nuigroup.touch {
 			
 			for (var head:String in TouchManager.headers) {
 				read.position = 0;
-				if (head == read.readUTFBytes(head.length)) {
+				if (head.length <= read.length &&head == read.readUTFBytes(head.length)) {
 					TouchManager.inputMode = TouchManager.headers[head];
 					break;
 				};
-				
 			};
 			
 			if (parser == arguments.callee) {
+				trace("unknown header");
 				return;
 			};
 			
@@ -84,6 +102,11 @@ package com.nuigroup.touch {
 			parser(read);
 			
 		};
+		
+		////////////////////////////////////////////////////////////////////////////////
+		////////////////////////////////////////////////////////////////////////////////
+		
+		//<---------------- CCV PARSER
 		
 		/**
 		 * function for parse TCP-CCV data
@@ -131,6 +154,54 @@ package com.nuigroup.touch {
 			interval = setTimeout(clearTouch, CCVTimeout);
 		};
 		
+		////////////////////////////////////////////////////////////////////////////////
+		////////////////////////////////////////////////////////////////////////////////
+		
+		//<---------------- FLASH XML PARSER
+		
+		public static function parseXML(data:IDataInput):void {
+			try {
+				var recived:Object = new Object();
+				var time:Number = (new Date).getTime();
+				var newStack:Object = new Object();
+				
+				var xml:XML = XML(data.readUTFBytes(data.bytesAvailable));
+				var msg:XMLList = xml.children();
+				for each(var info:XML in msg) {
+					var params:XMLList = info.children();
+					if (params.length() == 7) {
+						var id:int = int(params[1].@VALUE);
+						var touch:Touch = touchData[id];
+						if (touch) {
+							touch.move(Number(params[2].@VALUE) * TouchManager.width , Number(params[3].@VALUE) * TouchManager.height );
+							touchData[id] = null;
+						}else {
+							touch = new Touch( id , Number(params[2].@VALUE) * TouchManager.width , Number(params[3].@VALUE) * TouchManager.height  , time );
+						};
+						newStack[id] = touch;
+						touch.force = Number(params[6].@VALUE);
+					};
+				};
+				
+				for each(touch in touchData) {
+					if (touch) {
+						touch.end(time);
+					};
+				};
+				touchData = newStack;
+			}catch (er:Error) {
+				trace("read error: " ,er,er.getStackTrace());
+			};
+			if(!isNaN(interval)){
+				clearInterval(interval);
+			};
+			interval = setTimeout(clearTouch, CCVTimeout);
+		};
+		
+		////////////////////////////////////////////////////
+		
+		//<---------------- TOUCH DATA REMOVE , FOR CCV AND XML
+		
 		/**
 		 * clear CCV touch data
 		 */
@@ -146,6 +217,10 @@ package com.nuigroup.touch {
 			};
 		};
 		
+		////////////////////////////////////////////////////////////////////////////////
+		////////////////////////////////////////////////////////////////////////////////
+		
+		//<---------------- FLASH EVENTS PARSER
 		
 		/**
 		 * parse flash events binary data
@@ -179,9 +254,132 @@ package com.nuigroup.touch {
 				trace("parse error:FlashEvents");
 			};
 			while (data.bytesAvailable) {
-					data.readByte();
+				data.readByte();
 			};
 		};
+		
+		
+		
+		
+		////////////////////////////////////////////////////////////////////////////////
+		////////////////////////////////////////////////////////////////////////////////
+		
+		//<------------------------- TUIO
+		
+		public static var sequence:uint;
+		
+		/**
+		 * parse tuio message
+		 * @param	raw
+		 */
+		public static function parseTUIO(raw:IDataInput):void {
+			if (raw.bytesAvailable == 44 || raw.bytesAvailable == 48) {
+				return;
+			}
+			trace("parseTUIO");
+			var bytes:ByteArray = new ByteArray();
+			raw.readBytes(bytes);
+			try {
+				if ("#bundle" == bytes.readUTFBytes(8)) {
+					bytes.readUnsignedInt();// time
+					bytes.readUnsignedInt();// time
+					var length:int = bytes.readInt();
+					trace("length:",length);
+					var message:String = getMSG(bytes);
+					trace(message);
+					var params:Array = readParams(getMSG(bytes) , bytes);
+					params.shift();// remove type string
+					var alive:Array = params;// alive touch's
+					trace("alive:",alive);
+					bytes.position += 4; //
+				} else {
+					trace("header error");
+					return;
+				};
+				// get frame time
+				var time:Number = (new Date).getTime();
+				// loop on informations
+				while (bytes.bytesAvailable) {
+					if (bytes.readUTFBytes(1) == "/") {
+						bytes.position --;
+						var type:String = getMSG(bytes);
+						message = getMSG(bytes);
+						params = readParams(message , bytes);
+						trace(type , message);
+						switch(params[0]) {
+							case "set":
+								switch(type) {
+									case "tuio/2Dobj" :
+										break;
+									case "/tuio/2Dcur" :
+										var id:int = params[1];
+										var touch:Touch = touchData[id];
+										if (touch) {
+											touch.move(params[2] * TouchManager.width , params[3] * TouchManager.height);
+										} else {
+											touchData[id] = new Touch(id, params[2] * TouchManager.width, params[3] * TouchManager.height , time);
+										};
+										break;
+									case "/tuio/2Dblb" :
+										trace("read blob");
+										break;
+								};
+								
+								break;
+								
+							case "fseq":
+								//trace("sequence:", params[1]);
+								sequence = params[1];
+								break;
+						}
+						//bytes.position +=4;
+					} else {
+						trace("parseTUIO::invalid begin");
+					};
+					
+				};
+				
+				for each (touch in touchData) {
+					if (alive.indexOf(touch.id) == -1) {
+						touchData[touch.id];
+						touch.end(time);
+					};
+				};
+				
+				
+			} catch (er:Error) {
+				trace("encode error",er);
+			};
+		};
+		
+		protected static function readParams(pattern:String , bytes:IDataInput):Array {
+			var params:Array = new Array();
+			for (var c:int = 0; c < pattern.length; c++) {
+				switch(pattern.charAt(c)){
+					case "s": params.push(getMSG(bytes)); break;
+					case "f": params.push(bytes.readFloat());break;
+					case "i": params.push(bytes.readInt());break;
+					case "d": params.push(bytes.readDouble());break;
+					case "c": params.push(bytes.readMultiByte(4, "US-ASCII"));break;
+					case "r": params.push(bytes.readUnsignedInt());break;
+					default: break;
+				}
+			}
+			return params;
+			
+		}
+		
+		protected static function getMSG(bytes:IDataInput):String {
+			var out:String = "";
+			while (bytes.bytesAvailable > 0) {
+				var char:String = bytes.readUTFBytes(4);
+				out += char;
+				if(char.length < 4) break;
+			};
+			return out;
+		}
+		
+		
 		
 		
 		////////////////////////////////////////////////////////////////////////////////
@@ -218,7 +416,7 @@ package com.nuigroup.touch {
 		 * output function to dispach event .
 		 * Function scheme : f(phase:int , point:Point , target:DisplayObject , id:int, force:Number):void
 		 */
-		public static var EventDelegate:Function = dispatchMouseEvent;
+		internal static var EventDelegate:Function = dispatchMouseEvent;
 		
 		/**
 		 * dispatch output Event on selected object , if target is accessable for mouse

@@ -23,7 +23,7 @@ package com.nuigroup.touch{
 		/**
 		 * 
 		 * endian = LITTLE_ENDIAN
-		 * operation // bytes
+		 * operation 				// bytes
 		 * 
 		 * header:
 		 * writeUTFBytes("FL") 		// 2
@@ -39,8 +39,25 @@ package com.nuigroup.touch{
 		public static const FLASHEVENT:String = "flashtouchevent";
 		
 		
-		
+		/**
+		 * 
+		 * 
+		 * 
+		 * 
+		 * 
+		 * 
+		 */
 		public static const FLASHXML:String = "flashXML";
+		
+		
+		/**
+		 * 
+		 * 
+		 * 
+		 * 
+		 * 
+		 */
+		public static const TUIO:String = "tuioOSC";
 		
 		
 		public static const AUTO:String = "autoChoose";
