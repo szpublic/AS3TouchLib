@@ -1,4 +1,9 @@
 package com.nuigroup.touch {
+	import com.nuigroup.touch.parsers.AutoCheck;
+	import com.nuigroup.touch.parsers.CCVBinary;
+	import com.nuigroup.touch.parsers.FlashEvents;
+	import com.nuigroup.touch.parsers.FlashXML;
+	import com.nuigroup.touch.parsers.TUIOEncode;
 	import flash.display.Stage;
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
@@ -28,26 +33,26 @@ package com.nuigroup.touch {
 		/**
 		 * build-in parsers
 		 */
-		internal static var parsers:Object = {autoChoose:TouchCore.parseCheck , tuioOSC:TouchCore.parseTUIO ,flashXML:TouchCore.parseXML , ccvbinary:TouchCore.parseCCV , flashtouchevent:TouchCore.parseFlashEvent };
+		protected static var _parsers:Object;
 		
+		protected static const auto:AutoCheck = new AutoCheck();
 		
-		protected static var _headers:Object;
 		/**
-		 * build in parsers headers
+		 * return parsers
 		 */
-		public static function get headers():Object {
-			if (!_headers) {
-				_headers = new Object();
+		public static function get parsers():Object {
+			if (!_parsers) {
+				_parsers = new Object();
 				// ccv :
-				_headers["CCV"] = TouchProtocol.CCVINPUT;
+				_parsers[TouchProtocol.CCVINPUT] = new CCVBinary();
 				// flash events
-				_headers["FL"] = TouchProtocol.FLASHEVENT;
+				_parsers[TouchProtocol.FLASHEVENT] = new FlashEvents();
 				// xml
-				_headers["<OSCPACKET"] = TouchProtocol.FLASHXML;
+				_parsers[TouchProtocol.FLASHXML] = new FlashXML();
 				// tuio
-				_headers["#bundle"] = TouchProtocol.TUIO;
+				_parsers[TouchProtocol.TUIO] = new TUIOEncode();
 			};
-			return _headers;
+			return _parsers;
 		};
 		
 		////////////////////////////////////////////////////////////////////////////////
@@ -62,11 +67,10 @@ package com.nuigroup.touch {
 		 * @param	parsingFunction		function that recive message binary data , ex: function (data:IDataInput):void ;
 		 * @param	focus				if true , this parser will be set as primary
 		 */
-		public static function addParser(name:String , header:String , parsingFunction:Function , focus:Boolean = false):void {
-			parsers[name] = parsingFunction;
-			headers[header] = name;
+		public static function addParser( parser:ITouchParser , focus:Boolean = false):void {
+			parsers[parser.name] = parser;
 			if(focus){
-				inputMode = name;
+				TouchCore.parser = parser;
 			};
 		};
 		
@@ -76,11 +80,6 @@ package com.nuigroup.touch {
 		//<------------------------- INPUT & OUTPUT SETTINGS
 		
 		/**
-		 * input mode name
-		 * _headers[input]
-		 */
-		internal static var input:String;
-		/**
 		 * output mode name
 		 * MouseEvent or TouchEvent
 		 */
@@ -89,12 +88,10 @@ package com.nuigroup.touch {
 		/**
 		 * set binary data reader type , for build-in parsers use TouchProtocol class const values . Default is auto-check .
 		 */
-		public static function set inputMode(mode:String):void {
-			TouchCore.parser = parsers[mode];
-			input = mode;
+		public static function set inputMode(name:String):void {
+			TouchCore.parser = parsers[name];
 			if (TouchCore.parser == null) {
-				TouchCore.parser = TouchCore.parseCheck;
-				input = TouchProtocol.AUTO;
+				TouchCore.parser = auto;
 			};
 		};
 		
@@ -102,7 +99,7 @@ package com.nuigroup.touch {
 		 * return input mode type
 		 */
 		public static function get inputMode():String {
-			return input;
+			return TouchCore.parser.name;
 		};
 		
 		/**
@@ -142,10 +139,10 @@ package com.nuigroup.touch {
 		 * @param	inputMode			bytes reading mode (CCV , TouchEvents) - use TouchProtocol class
 		 * @param	outputMode			type of dispatching events (MouseEvent or TouchEvent)- use TouchOutput class
 		 */
-		public static function initConnection(stage:Stage , host:String = "127.0.0.1" , port:int = 3000 , inputMode:String = "autoChoose" ,outputMode:String = "MouseEvent"):void {
+		public static function initConnection(stage:Stage , host:String = "127.0.0.1" , port:int = 3000 , input:String = "autoChoose" ,output:String = "MouseEvent"):void {
 			TouchManager.stage = stage;
-			input = inputMode;
-			output = outputMode;
+			inputMode = input;
+			outputMode = output;
 			connect(host , port);
 		};
 		
@@ -156,10 +153,10 @@ package com.nuigroup.touch {
 		 * @param	inputMode			bytes reading mode - use TouchProtocol class
 		 * @param	outputMode			type of dispatching events - use TouchOutput class
 		 */
-		public static function initSocket(stage:Stage , socket:Socket , inputMode:String = "autoChoose" , outputMode:String = "MouseEvent"):void {
+		public static function initSocket(stage:Stage , socket:Socket , input:String = "autoChoose" , output:String = "MouseEvent"):void {
 			TouchManager.stage = stage;
-			input = inputMode;
-			output = outputMode;
+			inputMode = input;
+			outputMode = output;
 			socket.addEventListener(ProgressEvent.SOCKET_DATA , TouchCore.reciveData);
 		};
 		
@@ -233,14 +230,14 @@ package com.nuigroup.touch {
 		/**
 		 * return stage width
 		 */
-		static internal function get width():Number {
+		static public function get width():Number {
 			return stage ? stage.stageWidth : 0;
 		};
 		
 		/**
 		 * return stage height
 		 */
-		static internal function get height():Number {
+		static public function get height():Number {
 			return stage ? stage.stageHeight : 0;
 		};
 		

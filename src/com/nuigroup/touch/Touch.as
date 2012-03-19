@@ -74,11 +74,13 @@ package com.nuigroup.touch {
 		 * @param	initTime		initialize time
 		 */
 		public function Touch(id:int , x:Number , y:Number , initTime:Number) {
+			// touch id and begin position
 			this.id = id;
 			point.x = x;
 			point.y = y;
+			// touch start time
 			this.initTime = initTime;
-			
+			// get objects under position and dispatch Begin/MouseDown event
 			under = TouchCore.getObjects(point);
 			for each(var dsp:DisplayObject in under) {
 				TouchCore.dispatchEvent(0, point,dsp, id);
@@ -96,7 +98,7 @@ package com.nuigroup.touch {
 		 * @param	y		new y position
 		 */
 		public function move(x:Number , y:Number):void {
-			// change new and last position
+			// change new and last position (to not create new instances)
 			last.x = point.x;
 			last.y = point.y;
 			point.x = x;
@@ -147,6 +149,7 @@ package com.nuigroup.touch {
 					TouchCore.dispatchEvent(4,point,dsp,id);
 				};
 			};
+			// end touch
 			remove();
 		};
 		
@@ -159,6 +162,7 @@ package com.nuigroup.touch {
 		 * remove and release instances
 		 */
 		public function remove():void {
+			// if array exist - release and remove
 			if(under){
 				under.length = 0;
 				under = null;
